@@ -1,5 +1,8 @@
 package com.nullspace.multitenant.demo.multitenant;
 
+import com.nullspace.multitenant.demo.exceptions.InvalidDbPropertiesException;
+import com.nullspace.multitenant.demo.exceptions.InvalidTenantIdExeption;
+import com.nullspace.multitenant.demo.support.Cuid;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.jdbc.DataSourceProperties;
 import org.springframework.boot.jdbc.DataSourceBuilder;
@@ -11,12 +14,13 @@ import org.springframework.jdbc.datasource.DriverManagerDataSource;
 import org.springframework.jdbc.datasource.lookup.AbstractRoutingDataSource;
 
 import javax.sql.DataSource;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
 import java.io.InputStream;
 import java.sql.*;
-import java.util.Collection;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.function.Function;
 
 import static java.lang.String.format;
 
@@ -28,13 +32,18 @@ public class MultiTenantManager {
 	private final Map<Object, Object> tenantDataSources = new ConcurrentHashMap<>();
 	private final DataSourceProperties properties;
 
-	private Function<String, DataSourceProperties> tenantResolver;
+	private final TenantResolver tenantResolver;
 	private final static String DATABASE_URL = "jdbc:postgresql://localhost:5432/";
+
+	private static final String MSG_INVALID_TENANT_ID = "[!] DataSource not found for given tenant Id '{}'!";
+	private static final String MSG_INVALID_DB_PROPERTIES_ID = "[!] DataSource properties related to the given tenant ('{}') is invalid!";
+	private static final String MSG_RESOLVING_TENANT_ID = "[!] Could not resolve tenant ID '{}'!";
 
 	private AbstractRoutingDataSource multiTenantDataSource;
 
-	public MultiTenantManager(DataSourceProperties properties) {
+	public MultiTenantManager(DataSourceProperties properties, TenantResolver tenantResolver) {
 		this.properties = properties;
+		this.tenantResolver = tenantResolver;
 	}
 
 	@Bean
@@ -51,17 +60,12 @@ public class MultiTenantManager {
 		return multiTenantDataSource;
 	}
 
-	public void setTenantResolver(Function<String, DataSourceProperties> tenantResolver) {
-		this.tenantResolver = tenantResolver;
-	}
-
 	public void loadTenant(String tenantId) throws TenantResolvingException, TenantNotFoundException, SQLException {
 		if (tenantIsAbsent(tenantId)) {
 			if (tenantResolver != null) {
-				DataSourceProperties properties = tenantResolver.apply(tenantId);
+				DataSourceProperties properties = tenantResolver.resolveById(tenantId);
 
 				try {
-					properties = tenantResolver.apply(tenantId);
 					log.debug("[d] Datasource properties resolved for tenant ID '{}'", tenantId);
 				} catch (Exception e) {
 					throw new TenantResolvingException(e, "Could not resolve the tenant!");
@@ -84,11 +88,61 @@ public class MultiTenantManager {
 		log.debug("[d] Tenant '{}' set as current.", tenantId);
 	}
 
+	public String getTenantsIdByName(String name) {
+		return tenantResolver.getTenantsIdByName(name);
+	}
 
-	private ResultSet createTenantDb(String tenantName) {
-		String sql = loadSqlFromFile("sql/newDb.sql");
-		sql = sql.replace("*TENENTNAME*", tenantName);
-		return executeSql(sql);
+	//return new
+	public String createTenantDb(String url, String username, String password) {
+		ResultSet databaseExistsResponse = tenantDbExists(url);
+
+		// if databaseExists response is empty then create that database
+		try {
+			if(databaseExistsResponse.next()) {
+				System.out.println("Tenant already exists! Not creating new one.");
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+			System.out.println("Tenant failed to create!");
+			return "";
+		}
+
+		System.out.println("Tenant does not exist, creating new tenant.");
+		String tenantId = Cuid.createCuid();
+
+		try {
+			File file = new File("./tenants/atRuntime/" + url + ".properties");
+			if (file.exists()) {
+				System.out.println("Tenant file already exists.");
+			} else {
+
+				BufferedWriter writer = new BufferedWriter(new FileWriter(file, true));
+				writer.write("id=" + tenantId);
+				writer.newLine();
+				writer.write("url=" + url);
+				writer.newLine();
+				writer.write("username=" + username);
+				writer.newLine();
+				writer.write("password=" + password);
+				writer.flush();
+				writer.close();
+				if (file.canRead()) {
+					System.out.println("New tenant file is created!");
+				} else {
+					System.out.println("Tenant file failed to be created!");
+				}
+			}
+		} catch (Exception e) {
+			System.out.println("Tenant file failed to create");
+		}
+
+		String sqlDb = loadSqlFromFile("sql/newDb.sql");
+		sqlDb = sqlDb.replace("*TENENTNAME*", url);
+		executeSql(sqlDb);
+
+		String sqlTables = loadSqlFromFile("sql/dbTables.sql");
+		executeBatchSqlOnDb(sqlTables, url);
+		return tenantId;
 	}
 
 	private String loadSqlFromFile(String filePath) {
@@ -108,6 +162,25 @@ public class MultiTenantManager {
 		return "";
 	}
 
+	private void executeBatchSqlOnDb(String sql, String url) {
+		try {
+			Connection connection = DriverManager.getConnection(DATABASE_URL + url, "postgres", "postgres");
+			Statement statement = connection.createStatement();
+
+			List<String> list = new ArrayList<>(Arrays.asList(sql.split(";")));
+
+			for (String sqlStatement :
+					list) {
+				statement.addBatch(sqlStatement.trim() + "");
+			}
+
+			statement.executeBatch();
+
+		} catch (Exception e) {
+			log.error("Failed to execute sql: " + sql);
+		}
+	}
+
 	private ResultSet executeSql(String sql) {
 		try {
 			Connection connection = DriverManager.getConnection(DATABASE_URL, "postgres", "postgres");
@@ -118,7 +191,7 @@ public class MultiTenantManager {
 		} catch (Exception e) {
 			log.error("Failed to execute sql: " + sql);
 		}
-		// throw exception
+		// throw exceptions
 		return null;
 	}
 
@@ -128,20 +201,13 @@ public class MultiTenantManager {
 		return executeSql(sql);
 	}
 
-	public void addTenant(String tenantId, String tenantName, String username, String password) throws SQLException {
-
-		ResultSet databaseExistsResponse = tenantDbExists(tenantName);
-
-		// if databaseExitst response is empty then create that database
-		if(!databaseExistsResponse.next()) {
-			createTenantDb(tenantName);
-		}
+	public void addTenant(String tenantId, String url, String username, String password) throws SQLException {
+		createTenantDb(url, username, password);
 
 		// Load datasource
-
 		DataSource dataSource = DataSourceBuilder.create()
 				.driverClassName(properties.getDriverClassName())
-				.url(DATABASE_URL + tenantName)
+				.url(DATABASE_URL + url)
 				.username(username)
 				.password(password)
 				.build();
@@ -175,5 +241,20 @@ public class MultiTenantManager {
 		defaultDataSource.setUsername("default");
 		defaultDataSource.setPassword("default");
 		return defaultDataSource;
+	}
+
+	public void setTenant(String tenantId) {
+		try {
+			setCurrentTenant(tenantId);
+		} catch (SQLException e) {
+			log.error(MSG_INVALID_DB_PROPERTIES_ID, tenantId);
+			throw new InvalidDbPropertiesException();
+		} catch (TenantNotFoundException e) {
+			log.error(MSG_INVALID_TENANT_ID, tenantId);
+			throw new InvalidTenantIdExeption();
+		} catch (TenantResolvingException e) {
+			log.error(MSG_RESOLVING_TENANT_ID, tenantId);
+			throw new InvalidTenantIdExeption();
+		}
 	}
 }

@@ -1,24 +1,14 @@
 package com.nullspace.multitenant.demo.models.requests;
 
 public class TenantRequest {
-    private String id;
     private String url;
     private String username;
     private String password;
 
-    public TenantRequest(String id, String url, String username, String password) {
-        this.id = id;
+    public TenantRequest(String url, String username, String password) {
         this.url = url;
         this.username = username;
         this.password = password;
-    }
-
-    public String getId() {
-        return id;
-    }
-
-    public void setId(String id) {
-        this.id = id;
     }
 
     public String getUrl() {
