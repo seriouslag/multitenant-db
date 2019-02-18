@@ -34,7 +34,9 @@ public class MultiTenantManager {
 	private final DataSourceProperties properties;
 
 	private final TenantResolver tenantResolver;
-	private final static String DATABASE_URL = "jdbc:postgresql://localhost:5432/";
+
+    @Value("${databaseBaseUrl}")
+	private String DATABASE_BASE_URL;
 
 	private static final String MSG_INVALID_TENANT_ID = "[!] DataSource not found for given tenant Id '{}'!";
 	private static final String MSG_INVALID_DB_PROPERTIES_ID = "[!] DataSource properties related to the given tenant ('{}') is invalid!";
@@ -172,7 +174,7 @@ public class MultiTenantManager {
 
 	private void executeBatchSqlOnDb(String sql, String url) {
 		try {
-			Connection connection = DriverManager.getConnection(DATABASE_URL + url, "postgres", "postgres");
+			Connection connection = DriverManager.getConnection(DATABASE_BASE_URL + url, "postgres", "postgres");
 			Statement statement = connection.createStatement();
 
 			List<String> list = new ArrayList<>(Arrays.asList(sql.split(";")));
@@ -191,7 +193,7 @@ public class MultiTenantManager {
 
 	private ResultSet executeSql(String sql) {
 		try {
-			Connection connection = DriverManager.getConnection(DATABASE_URL, "postgres", "postgres");
+			Connection connection = DriverManager.getConnection(DATABASE_BASE_URL, "postgres", "postgres");
 			Statement statement = connection.createStatement();
 			statement.execute(sql);
 			return statement.getResultSet();
@@ -215,7 +217,7 @@ public class MultiTenantManager {
 		// Load datasource
 		DataSource dataSource = DataSourceBuilder.create()
 				.driverClassName(properties.getDriverClassName())
-				.url(DATABASE_URL + url)
+				.url(DATABASE_BASE_URL + url)
 				.username(username)
 				.password(password)
 				.build();
