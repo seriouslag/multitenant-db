@@ -1,7 +1,6 @@
 package com.nullspace.multitenant.demo.controller;
 
-import com.nullspace.multitenant.demo.exception.InvalidDbPropertiesException;
-import com.nullspace.multitenant.demo.exception.LoadDataSourceException;
+import com.nullspace.multitenant.demo.exceptions.InvalidDbPropertiesException;
 import com.nullspace.multitenant.demo.models.requests.TenantRequest;
 import com.nullspace.multitenant.demo.multitenant.MultiTenantManager;
 import com.nullspace.multitenant.demo.multitenant.TenantNotFoundException;
@@ -10,9 +9,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileWriter;
 import java.sql.SQLException;
 
 @Slf4j
@@ -57,46 +53,20 @@ public class TenantController {
 	 */
 	@PostMapping
 	public ResponseEntity<?> add(@RequestBody TenantRequest tenantRequest) {
-		
+
 		log.info("[i] Received add new tenant params request {}", tenantRequest);
-		
-		String tenantId = tenantRequest.getId();
+
 		String url = tenantRequest.getUrl();
 		String username = tenantRequest.getUsername();
 		String password = tenantRequest.getPassword();
-		
-		if (tenantId == null || url == null || username == null || password == null) {
+
+		if (url == null || username == null || password == null) {
 			log.error("[!] Received database params are incorrect or not full!");
 			throw new InvalidDbPropertiesException();
 		}
 
-		try {
-			File file = new File("./tenants/onStartUp/" + tenantId + ".properties");
-			BufferedWriter writer = new BufferedWriter(new FileWriter(file, true));
-			writer.write("id=" + tenantId);
-			writer.newLine();
-			writer.write("url=" + url);
-			writer.newLine();
-			writer.write("username=" + username);
-			writer.newLine();
-			writer.write("password=" + password);
-			writer.flush();
-			writer.close();
-			if (file.canRead()) {
-				System.out.println("New tenant file is created!");
-			} else {
-				System.out.println("Tenant file already exists.");
-			}
-		} catch (Exception e) {
-			System.out.println("Tenant file failed to create");
-		}
-		
-		try {
-			tenantManager.addTenant(tenantId, url, username, password);
-			log.info("[i] Loaded DataSource for tenant '{}'.", tenantId);
-			return ResponseEntity.ok(tenantRequest);
-		} catch (SQLException e) {
-			throw new LoadDataSourceException(e);
-		}
+		tenantManager.createTenantDb(url, username, password);
+		log.info("[i] Loaded DataSource for tenant '{}'.", url);
+		return ResponseEntity.ok(tenantRequest);
 	}
 }

@@ -20,6 +20,9 @@ spring:
           batch_size: 20
           fetch_size: 20
           batch_versioned_data: true
+  h2:
+    console:
+      enabled: true
 
 logging:
   level:
@@ -35,3 +38,12 @@ logging:
       springframework.orm.jpa: debug
       hibernate.jdbc: debug
     com.nullspace.multitenant.demo: debug
+
+app:
+  name: api-user-management
+
+jwt:
+  header: Authorization
+  expires_in: 900 # 5 minutes
+  secret: queenvictoriaqueenvictoriaqueenvictoriaqueenvictoriaqueenvictoriaqueenvictoriaqueenvictoriaqueenvictoriaqueenvictoriaqueenvictoria
+

@@ -1,4 +1,4 @@
-package com.nullspace.multitenant.demo.exception;
+package com.nullspace.multitenant.demo.exceptions;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.ResponseStatus;

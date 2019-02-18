@@ -1,3 +1,5 @@
-Requires postgres at default port with 3 databases named
-    tenant1, tenant2, tenant3
-to start out
+Requires postgres running
+
+
+
+*Foundation built off of https://github.com/Cepr0/sb-multitenant-db-demo/*
