@@ -12,8 +12,8 @@ import java.util.Collection;
 import java.util.List;
 
 @Entity
-@NoArgsConstructor
 @Table(name = "users")
+@NoArgsConstructor
 public class User extends BaseEntity implements UserDetails {
 
     @Column(name = "username")
@@ -59,10 +59,10 @@ public class User extends BaseEntity implements UserDetails {
     }
 
     public User(String firstName, String lastName,
-                String emailAddress, String password, String username) {
+                String email, String password, String username) {
         this.firstName = firstName;
         this.lastName = lastName;
-        this.email = emailAddress;
+        this.email = email;
         this.password = password;
         this.username = username;
         this.enabled = true;

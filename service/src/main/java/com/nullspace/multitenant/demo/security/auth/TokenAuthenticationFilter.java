@@ -48,7 +48,6 @@ public class TokenAuthenticationFilter extends OncePerRequestFilter {
             return;
         }
 
-
         // get username from token
         String username = tokenHelper.getUsernameFromToken(authToken);
         String tenantId = tokenHelper.getTenantIdFromToken(authToken);

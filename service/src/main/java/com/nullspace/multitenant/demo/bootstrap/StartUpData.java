@@ -34,8 +34,35 @@ public class StartUpData implements CommandLineRunner {
     }
 
     private void loadData() {
+        loadRootUser();
         loadTenant1();
         loadTenant2();
+    }
+
+    private void loadRootUser() {
+        System.out.println("Creating root tenant");
+
+        try {
+            // Add/create the tenant
+            tenantManager.addTenant("root", "postgres", "postgres");
+            // Set this context to using the new tenant
+            tenantManager.setCurrentTenant(tenantManager.getTenantsIdByName("root"));
+
+            // Roles
+            Authority adminAuth = new Authority(UserRoleName.ROLE_ADMIN);
+            List<Authority> adminAuthorities = new ArrayList<>();
+            adminAuthorities.add(adminAuth);
+            // End Roles
+
+            User user = new User("Root", "Root", "root@example.com", bCryptPasswordEncoder.encode("password"), "root");
+            user.setAuthorities(adminAuthorities);
+
+            userService.save(user);
+            System.out.println("Finished loading tenant-root.");
+        } catch (SQLException | TenantNotFoundException | TenantResolvingException e) {
+            e.printStackTrace();
+            System.out.println("Failed to load tenant-root");
+        }
     }
 
     private void loadTenant1() {

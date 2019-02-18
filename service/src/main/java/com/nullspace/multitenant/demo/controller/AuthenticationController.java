@@ -49,8 +49,8 @@ public class AuthenticationController {
             @RequestHeader(value = "X-TenantID") String tenantId,
             HttpServletResponse response
     ) throws AuthenticationException {
-
         tenantManager.setTenant(tenantId);
+
         // Perform the security
         final Authentication authentication = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(

@@ -18,7 +18,7 @@ public class TenantResolver {
     @Value("${tenantRuntimePath}")
     private String runtimePath;
 
-    DataSourceProperties resolveById(String tenantId) throws TenantNotFoundException {
+    public DataSourceProperties resolveById(String tenantId) throws TenantNotFoundException {
         File[] files = getTenantFilesFromPath(runtimePath);
 
         for (File propertyFile : files) {
@@ -38,7 +38,7 @@ public class TenantResolver {
         throw new TenantNotFoundException(msg);
     }
 
-    String getTenantsIdByName(String tenantName) throws TenantNotFoundException {
+    public String getTenantsIdByName(String tenantName) throws TenantNotFoundException {
         File[] files = getTenantFilesFromPath(runtimePath);
 
         for (File propertyFile : files) {

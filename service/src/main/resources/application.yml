@@ -50,3 +50,4 @@ jwt:
 tenantRuntimePath: tenants/atRuntime/
 tenantStartupPath: tenants/onStartUp/
 databaseBaseUrl: jdbc:postgresql://localhost:5432/
+rootTenantName: root

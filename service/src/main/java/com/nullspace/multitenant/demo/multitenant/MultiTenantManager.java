@@ -45,6 +45,9 @@ public class MultiTenantManager {
 	@Value("${tenantRuntimePath}")
 	private String runtimePath;
 
+	@Value("${rootTenantName}")
+	private String rootTenantName;
+
 	private AbstractRoutingDataSource multiTenantDataSource;
 
 	public MultiTenantManager(DataSourceProperties properties, TenantResolver tenantResolver) {
@@ -98,7 +101,7 @@ public class MultiTenantManager {
 		return tenantResolver.getTenantsIdByName(name);
 	}
 
-	//return new
+	//returns id of created tenant
 	public String createTenantDb(String url, String username, String password) {
 		ResultSet databaseExistsResponse = tenantDbExists(url);
 
@@ -210,8 +213,11 @@ public class MultiTenantManager {
 
 	private ResultSet tenantDbExists(String tenantName) {
 		String sql = loadSqlFromFile("sql/dbExists.sql");
-		sql = sql.replace("*TENANTNAME*", tenantName);
-		return executeSql(sql);
+		StringBuilder sb = new StringBuilder();
+		Formatter fmt = new Formatter(sb);
+		fmt.format(sql, tenantName);
+		String formattedSql = fmt.toString();
+		return executeSql(formattedSql);
 	}
 
 	public void addTenant(String url, String username, String password) throws SQLException {
