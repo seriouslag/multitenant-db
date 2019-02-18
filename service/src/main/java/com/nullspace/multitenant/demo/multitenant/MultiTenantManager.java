@@ -94,7 +94,7 @@ public class MultiTenantManager {
 		log.debug("[d] Tenant '{}' set as current.", tenantId);
 	}
 
-	public String getTenantsIdByName(String name) {
+	public String getTenantsIdByName(String name) throws TenantNotFoundException {
 		return tenantResolver.getTenantsIdByName(name);
 	}
 
@@ -151,6 +151,9 @@ public class MultiTenantManager {
 		} catch (SQLException e) {
 			e.printStackTrace();
 			System.out.println("Tenant failed to create!");
+		} catch (TenantNotFoundException e) {
+			e.printStackTrace();
+			System.out.println("Tenant failed to create! - 2");
 		}
 		return "";
 	}
