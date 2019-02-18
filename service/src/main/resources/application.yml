@@ -47,3 +47,5 @@ jwt:
   expires_in: 900 # 5 minutes
   secret: queenvictoriaqueenvictoriaqueenvictoriaqueenvictoriaqueenvictoriaqueenvictoriaqueenvictoriaqueenvictoriaqueenvictoriaqueenvictoria
 
+tenantRuntimePath: tenants/atRuntime/
+tenantStartupPath: tenants/onStartUp/

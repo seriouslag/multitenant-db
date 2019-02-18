@@ -1,8 +1,10 @@
 package com.nullspace.multitenant.demo;
 
 import com.nullspace.multitenant.demo.multitenant.MultiTenantManager;
+import com.nullspace.multitenant.demo.multitenant.TenantResolver;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
@@ -13,7 +15,6 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.nio.file.Paths;
 import java.sql.SQLException;
 import java.util.Properties;
 
@@ -22,11 +23,16 @@ import static java.lang.String.format;
 @Slf4j
 @SpringBootApplication
 public class Application {
+
+	@Value("${tenantStartupPath}")
+	private String startupPath;
 	
 	private final MultiTenantManager tenantManager;
+	private final TenantResolver tenantResolver;
 	
-	public Application(MultiTenantManager tenantManager) {
+	public Application(MultiTenantManager tenantManager, TenantResolver tenantResolver) {
 		this.tenantManager = tenantManager;
+		this.tenantResolver = tenantResolver;
 	}
 	
 	public static void main(String[] args) {
@@ -46,12 +52,7 @@ public class Application {
 	@EventListener
 	public void onReady(ApplicationReadyEvent event) {
 
-		File[] files = Paths.get("tenants/onStartUp").toFile().listFiles();
-
-		if (files == null) {
-			log.warn("[!] Tenant property files not found at ./tenants/onStartUp folder!");
-			return;
-		}
+		File[] files = tenantResolver.getTenantFilesFromPath(startupPath);
 
 		for (File propertyFile : files) {
 			Properties tenantProperties = new Properties();
@@ -63,7 +64,7 @@ public class Application {
 			String password = tenantProperties.getProperty("password");
 
 			try {
-				tenantManager.addTenant(tenantId, url, username, password);
+				tenantManager.addTenant(url, username, password);
 				log.info("[i] Loaded DataSource for tenant '{}'.", tenantId);
 			} catch (SQLException e) {
 				log.error(format("[!] Could not load DataSource for tenant '%s'!", tenantId), e);

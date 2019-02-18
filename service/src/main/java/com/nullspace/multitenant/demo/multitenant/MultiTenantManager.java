@@ -4,6 +4,7 @@ import com.nullspace.multitenant.demo.exceptions.InvalidDbPropertiesException;
 import com.nullspace.multitenant.demo.exceptions.InvalidTenantIdExeption;
 import com.nullspace.multitenant.demo.support.Cuid;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.jdbc.DataSourceProperties;
 import org.springframework.boot.jdbc.DataSourceBuilder;
 import org.springframework.context.annotation.Bean;
@@ -38,6 +39,9 @@ public class MultiTenantManager {
 	private static final String MSG_INVALID_TENANT_ID = "[!] DataSource not found for given tenant Id '{}'!";
 	private static final String MSG_INVALID_DB_PROPERTIES_ID = "[!] DataSource properties related to the given tenant ('{}') is invalid!";
 	private static final String MSG_RESOLVING_TENANT_ID = "[!] Could not resolve tenant ID '{}'!";
+
+	@Value("${tenantRuntimePath}")
+	private String runtimePath;
 
 	private AbstractRoutingDataSource multiTenantDataSource;
 
@@ -75,7 +79,7 @@ public class MultiTenantManager {
 				String username = properties.getUsername();
 				String password = properties.getPassword();
 
-				addTenant(tenantId, url, username, password);
+				addTenant(url, username, password);
 			} else {
 				throw new TenantNotFoundException(format("Tenant %s not found!", tenantId));
 			}
@@ -100,49 +104,53 @@ public class MultiTenantManager {
 		try {
 			if(databaseExistsResponse.next()) {
 				System.out.println("Tenant already exists! Not creating new one.");
+				return tenantResolver.getTenantsIdByName(url);
+			} else {
+				System.out.println("Tenant not found! Creating new one.");
+
+				System.out.println("Tenant does not exist, creating new tenant.");
+				String tenantId = Cuid.createCuid();
+
+				try {
+					File file = new File(runtimePath + url + ".properties");
+					if (file.exists()) {
+						System.out.println("Tenant file already exists.");
+					} else {
+
+						BufferedWriter writer = new BufferedWriter(new FileWriter(file, true));
+						writer.write("id=" + tenantId);
+						writer.newLine();
+						writer.write("url=" + url);
+						writer.newLine();
+						writer.write("username=" + username);
+						writer.newLine();
+						writer.write("password=" + password);
+						writer.flush();
+						writer.close();
+						if (file.canRead()) {
+							System.out.println("New tenant file is created!");
+						} else {
+							System.out.println("Tenant file failed to be created!");
+						}
+					}
+				} catch (Exception e) {
+					System.out.println("Tenant file failed to create");
+				}
+
+				String sqlDb = loadSqlFromFile("sql/newDb.sql");
+				sqlDb = sqlDb.replace("*TENENTNAME*", url);
+				executeSql(sqlDb);
+
+				String sqlTables = loadSqlFromFile("sql/dbTables.sql");
+				executeBatchSqlOnDb(sqlTables, url);
+				return tenantId;
 			}
+
 		} catch (SQLException e) {
 			e.printStackTrace();
 			System.out.println("Tenant failed to create!");
-			return "";
 		}
-
-		System.out.println("Tenant does not exist, creating new tenant.");
-		String tenantId = Cuid.createCuid();
-
-		try {
-			File file = new File("./tenants/atRuntime/" + url + ".properties");
-			if (file.exists()) {
-				System.out.println("Tenant file already exists.");
-			} else {
-
-				BufferedWriter writer = new BufferedWriter(new FileWriter(file, true));
-				writer.write("id=" + tenantId);
-				writer.newLine();
-				writer.write("url=" + url);
-				writer.newLine();
-				writer.write("username=" + username);
-				writer.newLine();
-				writer.write("password=" + password);
-				writer.flush();
-				writer.close();
-				if (file.canRead()) {
-					System.out.println("New tenant file is created!");
-				} else {
-					System.out.println("Tenant file failed to be created!");
-				}
-			}
-		} catch (Exception e) {
-			System.out.println("Tenant file failed to create");
-		}
-
-		String sqlDb = loadSqlFromFile("sql/newDb.sql");
-		sqlDb = sqlDb.replace("*TENENTNAME*", url);
-		executeSql(sqlDb);
-
-		String sqlTables = loadSqlFromFile("sql/dbTables.sql");
-		executeBatchSqlOnDb(sqlTables, url);
-		return tenantId;
+		return "";
 	}
 
 	private String loadSqlFromFile(String filePath) {
@@ -201,8 +209,8 @@ public class MultiTenantManager {
 		return executeSql(sql);
 	}
 
-	public void addTenant(String tenantId, String url, String username, String password) throws SQLException {
-		createTenantDb(url, username, password);
+	public void addTenant(String url, String username, String password) throws SQLException {
+		String tenantId = createTenantDb(url, username, password);
 
 		// Load datasource
 		DataSource dataSource = DataSourceBuilder.create()
@@ -226,7 +234,7 @@ public class MultiTenantManager {
 		return (DataSource) removedDataSource;
 	}
 
-	public boolean tenantIsAbsent(String tenantId) {
+	private boolean tenantIsAbsent(String tenantId) {
 		return !tenantDataSources.containsKey(tenantId);
 	}
 

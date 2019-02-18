@@ -85,3 +85,6 @@ service/tenants/
 !/tenants/onStartUp/tenant2.properties
 !/tenants/
 !/multitenant/tenants/
+
+### Ignore tenant files ###
+*.properties

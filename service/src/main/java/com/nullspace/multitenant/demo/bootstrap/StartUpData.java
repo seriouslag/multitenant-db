@@ -39,10 +39,11 @@ public class StartUpData implements CommandLineRunner {
     }
 
     private void loadTenant1() {
-        // setting data to tenant 1
+        System.out.println("Loading/creating tenant1...");
         try {
-            String id = tenantManager.createTenantDb("tenant1", "postgres", "postgres");
-            tenantManager.addTenant(id, "tenant1", "postgres", "postgres");
+            // Add/create the tenant
+            tenantManager.addTenant("tenant1", "postgres", "postgres");
+            // Set this context to using the new tenant
             tenantManager.setCurrentTenant(tenantManager.getTenantsIdByName("tenant1"));
             // Roles
             Authority adminAuth = new Authority(UserRoleName.ROLE_ADMIN);
@@ -54,16 +55,19 @@ public class StartUpData implements CommandLineRunner {
             user.setAuthorities(adminAuthorities);
 
             userService.save(user);
+            System.out.println("Finished loading tenant1.");
         } catch (SQLException | TenantNotFoundException | TenantResolvingException e) {
             e.printStackTrace();
+            System.out.println("Failed to load tenant1");
         }
     }
 
     private void loadTenant2() {
-        // setting data to tenant 2
+        System.out.println("Loading/creating tenant2...");
         try {
-            String id = tenantManager.createTenantDb("tenant2", "postgres", "postgres");
-            tenantManager.addTenant(id,"tenant2", "postgres", "postgres");
+            // Add/create the tenant
+            tenantManager.addTenant("tenant2", "postgres", "postgres");
+            // Set this context to using the new tenant
             tenantManager.setCurrentTenant(tenantManager.getTenantsIdByName("tenant2"));
 
             // Roles
@@ -76,8 +80,10 @@ public class StartUpData implements CommandLineRunner {
             user.setAuthorities(adminAuthorities);
 
             userService.save(user);
+            System.out.println("Finished loading tenant2.");
         } catch (SQLException | TenantNotFoundException | TenantResolvingException e) {
             e.printStackTrace();
+            System.out.println("Failed to load tenant2");
         }
     }
 }
