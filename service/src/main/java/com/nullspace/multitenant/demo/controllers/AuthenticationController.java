@@ -1,4 +1,4 @@
-package com.nullspace.multitenant.demo.controller;
+package com.nullspace.multitenant.demo.controllers;
 
 import com.nullspace.multitenant.demo.models.UserTokenState;
 import com.nullspace.multitenant.demo.models.entities.User;

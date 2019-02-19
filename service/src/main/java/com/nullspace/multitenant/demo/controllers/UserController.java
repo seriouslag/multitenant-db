@@ -1,4 +1,4 @@
-package com.nullspace.multitenant.demo.controller;
+package com.nullspace.multitenant.demo.controllers;
 
 import com.nullspace.multitenant.demo.exceptions.NotFound;
 import com.nullspace.multitenant.demo.models.entities.User;

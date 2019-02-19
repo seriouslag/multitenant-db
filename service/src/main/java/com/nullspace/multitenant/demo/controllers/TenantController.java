@@ -1,4 +1,4 @@
-package com.nullspace.multitenant.demo.controller;
+package com.nullspace.multitenant.demo.controllers;
 
 import com.nullspace.multitenant.demo.exceptions.InvalidDbPropertiesException;
 import com.nullspace.multitenant.demo.models.UserRoleName;
