@@ -66,14 +66,23 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 
     @Override
     protected void configure(HttpSecurity http) throws Exception {
+
+
+
         http
                 .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS).and()
                 .exceptionHandling().authenticationEntryPoint(restAuthenticationEntryPoint).and()
                 .authorizeRequests()
                 .antMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                .antMatchers("/api/auth/**").permitAll()
                 .anyRequest().authenticated().and()
                 .addFilterBefore(new TokenAuthenticationFilter(tokenHelper, jwtUserDetailsService, tenantManager, notProtectedUriPatterns), BasicAuthenticationFilter.class);
+
+        for(String pattern: notProtectedUriPatterns) {
+            http
+                    .authorizeRequests()
+                    .antMatchers(pattern)
+                    .permitAll();
+        }
 
         http.csrf().disable();
     }
