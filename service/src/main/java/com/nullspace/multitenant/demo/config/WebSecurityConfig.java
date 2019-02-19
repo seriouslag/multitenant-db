@@ -21,6 +21,8 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.authentication.www.BasicAuthenticationFilter;
 
+import java.util.List;
+
 @Configuration
 @EnableWebSecurity
 @EnableGlobalMethodSecurity(prePostEnabled = true)
@@ -30,13 +32,19 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
     private final RestAuthenticationEntryPoint restAuthenticationEntryPoint;
     private final TokenHelper tokenHelper;
     private final MultiTenantManager tenantManager;
+    private final  List<String> notProtectedUriPatterns;
 
     @Autowired
-    public WebSecurityConfig(@Lazy CustomUserDetailsService userDetailsService, RestAuthenticationEntryPoint entryPoint, TokenHelper tokenHelper, MultiTenantManager tenantManager) {
+    public WebSecurityConfig(@Lazy CustomUserDetailsService userDetailsService,
+                             RestAuthenticationEntryPoint entryPoint,
+                             TokenHelper tokenHelper,
+                             MultiTenantManager tenantManager,
+                             List<String> notProtectedUriPatterns) {
         this.jwtUserDetailsService = userDetailsService;
         this.restAuthenticationEntryPoint = entryPoint;
         this.tokenHelper = tokenHelper;
         this.tenantManager = tenantManager;
+        this.notProtectedUriPatterns = notProtectedUriPatterns;
     }
 
     @Bean
@@ -65,7 +73,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
                 .antMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                 .antMatchers("/api/auth/**").permitAll()
                 .anyRequest().authenticated().and()
-                .addFilterBefore(new TokenAuthenticationFilter(tokenHelper, jwtUserDetailsService, tenantManager), BasicAuthenticationFilter.class);
+                .addFilterBefore(new TokenAuthenticationFilter(tokenHelper, jwtUserDetailsService, tenantManager, notProtectedUriPatterns), BasicAuthenticationFilter.class);
 
         http.csrf().disable();
     }

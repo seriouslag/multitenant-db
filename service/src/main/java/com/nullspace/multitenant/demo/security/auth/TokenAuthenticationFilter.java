@@ -9,6 +9,8 @@ import org.apache.commons.logging.LogFactory;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.util.AntPathMatcher;
+import org.springframework.util.PathMatcher;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import javax.servlet.FilterChain;
@@ -17,6 +19,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.sql.SQLException;
+import java.util.List;
 
 
 public class TokenAuthenticationFilter extends OncePerRequestFilter {
@@ -27,11 +30,24 @@ public class TokenAuthenticationFilter extends OncePerRequestFilter {
 
     private UserDetailsService userDetailsService;
     private final MultiTenantManager tenantManager;
+    private final List<String> notProtectedUriPatterns;
 
-    public TokenAuthenticationFilter(TokenHelper tokenHelper, UserDetailsService userDetailsService, MultiTenantManager tenantManager){
+    private PathMatcher a = new AntPathMatcher();
+
+    public TokenAuthenticationFilter(TokenHelper tokenHelper, UserDetailsService userDetailsService, MultiTenantManager tenantManager, List<String> notProtectedUriPatterns){
         this.tokenHelper = tokenHelper;
         this.userDetailsService = userDetailsService;
         this.tenantManager = tenantManager;
+        this.notProtectedUriPatterns = notProtectedUriPatterns;
+    }
+
+    private boolean isUriProtected(String uri) {
+        for(String pattern: notProtectedUriPatterns) {
+            if(a.match(pattern, uri)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     @Override
@@ -40,6 +56,11 @@ public class TokenAuthenticationFilter extends OncePerRequestFilter {
             HttpServletResponse response,
             FilterChain chain
     ) throws IOException, ServletException {
+        if ("OPTIONS".equalsIgnoreCase(request.getMethod()) ||
+                isUriProtected(request.getRequestURI())) {
+            chain.doFilter(request, response);
+            return;
+        }
 
         String authToken = tokenHelper.getToken(request);
 
