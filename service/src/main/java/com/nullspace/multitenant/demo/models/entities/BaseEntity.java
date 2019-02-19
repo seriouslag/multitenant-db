@@ -20,4 +20,18 @@ public class BaseEntity implements Serializable {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     protected Long id;
 
+    public boolean isNew() {
+        return getId() == null;
+    }
+
+    @Override
+    public String toString() {
+        return "entity." +
+                getClass().getSimpleName() +
+                "<" +
+                getId() +
+                "-" +
+                super.toString() +
+                ">";
+    }
 }
