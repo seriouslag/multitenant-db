@@ -3,9 +3,10 @@ package com.nullspace.multitenant.demo.bootstrap;
 import com.nullspace.multitenant.demo.models.UserRoleName;
 import com.nullspace.multitenant.demo.models.entities.Authority;
 import com.nullspace.multitenant.demo.models.entities.User;
+import com.nullspace.multitenant.demo.multitenant.Exceptions.NoTenantFilesFound;
+import com.nullspace.multitenant.demo.multitenant.Exceptions.TenantNotFound;
+import com.nullspace.multitenant.demo.multitenant.Exceptions.TenantResolving;
 import com.nullspace.multitenant.demo.multitenant.MultiTenantManager;
-import com.nullspace.multitenant.demo.multitenant.TenantNotFoundException;
-import com.nullspace.multitenant.demo.multitenant.TenantResolvingException;
 import com.nullspace.multitenant.demo.service.interfaces.IUserService;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -59,7 +60,7 @@ public class StartUpData implements CommandLineRunner {
 
             userService.save(user);
             System.out.println("Finished loading tenant-root.");
-        } catch (SQLException | TenantNotFoundException | TenantResolvingException e) {
+        } catch (SQLException | TenantNotFound | TenantResolving | NoTenantFilesFound e) {
             e.printStackTrace();
             System.out.println("Failed to load tenant-root");
         }
@@ -83,7 +84,7 @@ public class StartUpData implements CommandLineRunner {
 
             userService.save(user);
             System.out.println("Finished loading tenant1.");
-        } catch (SQLException | TenantNotFoundException | TenantResolvingException e) {
+        } catch (SQLException | TenantNotFound | TenantResolving | NoTenantFilesFound e) {
             e.printStackTrace();
             System.out.println("Failed to load tenant1");
         }
@@ -108,7 +109,7 @@ public class StartUpData implements CommandLineRunner {
 
             userService.save(user);
             System.out.println("Finished loading tenant2.");
-        } catch (SQLException | TenantNotFoundException | TenantResolvingException e) {
+        } catch (SQLException | TenantNotFound | TenantResolving | NoTenantFilesFound e) {
             e.printStackTrace();
             System.out.println("Failed to load tenant2");
         }

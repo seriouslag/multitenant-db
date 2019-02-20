@@ -5,9 +5,11 @@ import com.nullspace.multitenant.demo.models.UserRoleName;
 import com.nullspace.multitenant.demo.models.entities.Authority;
 import com.nullspace.multitenant.demo.models.entities.User;
 import com.nullspace.multitenant.demo.models.requests.TenantRequest;
+import com.nullspace.multitenant.demo.multitenant.Exceptions.NoTenantFilesFound;
+import com.nullspace.multitenant.demo.multitenant.Exceptions.TenantNotFound;
+import com.nullspace.multitenant.demo.multitenant.Exceptions.TenantResolving;
 import com.nullspace.multitenant.demo.multitenant.MultiTenantManager;
-import com.nullspace.multitenant.demo.multitenant.TenantNotFoundException;
-import com.nullspace.multitenant.demo.multitenant.TenantResolvingException;
+import com.nullspace.multitenant.demo.multitenant.TenantResolver;
 import com.nullspace.multitenant.demo.service.interfaces.IUserService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
@@ -21,15 +23,17 @@ import java.util.List;
 
 @Slf4j
 @RestController
-@RequestMapping("/tenants")
+@RequestMapping("/api/tenants")
 public class TenantController {
 	
 	private final MultiTenantManager tenantManager;
+	private final TenantResolver tenantResolver;
 	private final IUserService userService;
 	
-	public TenantController(MultiTenantManager tenantManager, IUserService userService) {
+	public TenantController(MultiTenantManager tenantManager, IUserService userService, TenantResolver tenantResolver) {
 		this.tenantManager = tenantManager;
 		this.userService = userService;
+		this.tenantResolver = tenantResolver;
 	}
 
 	/**
@@ -37,7 +41,7 @@ public class TenantController {
 	 */
 	@GetMapping
 	public ResponseEntity<?> getAll() {
-		return ResponseEntity.ok(tenantManager.getTenantList());
+		return ResponseEntity.ok(tenantResolver.getListOfAvailableTenants());
 	}
 
 
@@ -47,11 +51,17 @@ public class TenantController {
 		try {
 			tenantManager.loadTenant(tenantId);
 			return ResponseEntity.ok("Loaded tenant: " + tenantId);
-		} catch (TenantResolvingException e) {
+		} catch (TenantResolving e) {
+			log.error("Failed to resolve tenant!");
 			e.printStackTrace();
-		} catch (TenantNotFoundException e) {
+		} catch (TenantNotFound e) {
+			log.error("Failed to find tenant!");
 			return ResponseEntity.notFound().build();
 		} catch (SQLException e) {
+			log.error("Failed to load tenant, sql error!");
+			e.printStackTrace();
+		} catch (NoTenantFilesFound e) {
+			log.error("No tenant files were found!");
 			e.printStackTrace();
 		}
 		return ResponseEntity.status(500).build();
@@ -96,7 +106,7 @@ public class TenantController {
 			tenantManager.setCurrentTenant(id);
 			System.out.println("Added root user to new tenant");
 			userService.save(rootUser);
-		} catch (SQLException | TenantResolvingException | TenantNotFoundException e) {
+		} catch (SQLException | TenantResolving | TenantNotFound | NoTenantFilesFound e) {
 			System.out.println("Failed to set current tenant to new tenant");
 			e.printStackTrace();
 		}

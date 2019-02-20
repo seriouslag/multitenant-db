@@ -2,6 +2,9 @@ package com.nullspace.multitenant.demo.multitenant;
 
 import com.nullspace.multitenant.demo.exceptions.InvalidDbPropertiesException;
 import com.nullspace.multitenant.demo.exceptions.InvalidTenantIdExeption;
+import com.nullspace.multitenant.demo.multitenant.Exceptions.NoTenantFilesFound;
+import com.nullspace.multitenant.demo.multitenant.Exceptions.TenantNotFound;
+import com.nullspace.multitenant.demo.multitenant.Exceptions.TenantResolving;
 import com.nullspace.multitenant.demo.support.Cuid;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -41,6 +44,7 @@ public class MultiTenantManager {
 	private static final String MSG_INVALID_TENANT_ID = "[!] DataSource not found for given tenant Id '{}'!";
 	private static final String MSG_INVALID_DB_PROPERTIES_ID = "[!] DataSource properties related to the given tenant ('{}') is invalid!";
 	private static final String MSG_RESOLVING_TENANT_ID = "[!] Could not resolve tenant ID '{}'!";
+	private static final String MSG_NO_TENANT_FILES_FOUND = "[!] Could not find tenant files '{}'!";
 
 	@Value("${tenantRuntimePath}")
 	private String runtimePath;
@@ -69,7 +73,7 @@ public class MultiTenantManager {
 		return multiTenantDataSource;
 	}
 
-	public void loadTenant(String tenantId) throws TenantResolvingException, TenantNotFoundException, SQLException {
+	public void loadTenant(String tenantId) throws TenantResolving, TenantNotFound, SQLException, NoTenantFilesFound {
 		if (tenantIsAbsent(tenantId)) {
 			if (tenantResolver != null) {
 				DataSourceProperties properties = tenantResolver.resolveById(tenantId);
@@ -77,7 +81,7 @@ public class MultiTenantManager {
 				try {
 					log.debug("[d] Datasource properties resolved for tenant ID '{}'", tenantId);
 				} catch (Exception e) {
-					throw new TenantResolvingException(e, "Could not resolve the tenant!");
+					throw new TenantResolving(e, "Could not resolve the tenant!");
 				}
 
 				String url = properties.getUrl();
@@ -86,18 +90,18 @@ public class MultiTenantManager {
 
 				addTenant(url, username, password);
 			} else {
-				throw new TenantNotFoundException(format("Tenant %s not found!", tenantId));
+				throw new TenantNotFound(format("Tenant %s not found!", tenantId));
 			}
 		}
 	}
 
-	public void setCurrentTenant(String tenantId) throws SQLException, TenantNotFoundException, TenantResolvingException {
+	public void setCurrentTenant(String tenantId) throws SQLException, TenantNotFound, TenantResolving, NoTenantFilesFound {
 		loadTenant(tenantId);
 		currentTenant.set(tenantId);
 		log.debug("[d] Tenant '{}' set as current.", tenantId);
 	}
 
-	public String getTenantsIdByName(String name) throws TenantNotFoundException {
+	public String getTenantsIdByName(String name) throws TenantNotFound, NoTenantFilesFound {
 		return tenantResolver.getTenantsIdByName(name);
 	}
 
@@ -153,10 +157,13 @@ public class MultiTenantManager {
 
 		} catch (SQLException e) {
 			e.printStackTrace();
-			System.out.println("Tenant failed to create!");
-		} catch (TenantNotFoundException e) {
+			log.error("Tenant failed to create!");
+		} catch (TenantNotFound e) {
 			e.printStackTrace();
-			System.out.println("Tenant failed to create! - 2");
+			log.error("Tenant failed to create! - 2");
+		} catch (NoTenantFilesFound e) {
+			e.printStackTrace();
+			log.error("No tenant files where found!");
 		}
 		return "";
 	}
@@ -268,12 +275,15 @@ public class MultiTenantManager {
 		} catch (SQLException e) {
 			log.error(MSG_INVALID_DB_PROPERTIES_ID, tenantId);
 			throw new InvalidDbPropertiesException();
-		} catch (TenantNotFoundException e) {
+		} catch (TenantNotFound e) {
 			log.error(MSG_INVALID_TENANT_ID, tenantId);
 			throw new InvalidTenantIdExeption();
-		} catch (TenantResolvingException e) {
+		} catch (TenantResolving e) {
 			log.error(MSG_RESOLVING_TENANT_ID, tenantId);
 			throw new InvalidTenantIdExeption();
+		} catch (NoTenantFilesFound e) {
+			log.error(MSG_NO_TENANT_FILES_FOUND, tenantId);
+			e.printStackTrace();
 		}
 	}
 }

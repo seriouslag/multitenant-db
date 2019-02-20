@@ -1,5 +1,6 @@
 package com.nullspace.multitenant.demo;
 
+import com.nullspace.multitenant.demo.multitenant.Exceptions.NoTenantFilesFound;
 import com.nullspace.multitenant.demo.multitenant.MultiTenantManager;
 import com.nullspace.multitenant.demo.multitenant.TenantResolver;
 import lombok.SneakyThrows;
@@ -52,9 +53,16 @@ public class Application {
 	@EventListener
 	public void onReady(ApplicationReadyEvent event) {
 
-		File[] files = tenantResolver.getTenantFilesFromPath(startupPath);
+		// Getting tenant property files
+		File[] files = new File[0];
+		try {
+			files = tenantResolver.getTenantFilesFromPath(startupPath);
+		} catch (NoTenantFilesFound noTenantFilesFound) {
+			log.warn("No tenant files were found at path: " + startupPath);
+		}
 
 		for (File propertyFile : files) {
+			// Getting tenant properties out of files
 			Properties tenantProperties = new Properties();
 			tenantProperties.load(new FileInputStream(propertyFile));
 
@@ -64,6 +72,7 @@ public class Application {
 			String password = tenantProperties.getProperty("password");
 
 			try {
+				// Loading tenant
 				tenantManager.addTenant(url, username, password);
 				log.info("[i] Loaded DataSource for tenant '{}'.", tenantId);
 			} catch (SQLException e) {

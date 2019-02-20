@@ -1,8 +1,9 @@
 package com.nullspace.multitenant.demo.security.auth;
 
+import com.nullspace.multitenant.demo.multitenant.Exceptions.NoTenantFilesFound;
+import com.nullspace.multitenant.demo.multitenant.Exceptions.TenantNotFound;
+import com.nullspace.multitenant.demo.multitenant.Exceptions.TenantResolving;
 import com.nullspace.multitenant.demo.multitenant.MultiTenantManager;
-import com.nullspace.multitenant.demo.multitenant.TenantNotFoundException;
-import com.nullspace.multitenant.demo.multitenant.TenantResolvingException;
 import com.nullspace.multitenant.demo.security.TokenHelper;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -34,14 +35,17 @@ public class TokenAuthenticationFilter extends OncePerRequestFilter {
 
     private PathMatcher a = new AntPathMatcher();
 
-    public TokenAuthenticationFilter(TokenHelper tokenHelper, UserDetailsService userDetailsService, MultiTenantManager tenantManager, List<String> notProtectedUriPatterns){
+    public TokenAuthenticationFilter(TokenHelper tokenHelper,
+                                     UserDetailsService userDetailsService,
+                                     MultiTenantManager tenantManager,
+                                     List<String> notProtectedUriPatterns) {
         this.tokenHelper = tokenHelper;
         this.userDetailsService = userDetailsService;
         this.tenantManager = tenantManager;
         this.notProtectedUriPatterns = notProtectedUriPatterns;
     }
 
-    private boolean isUriProtected(String uri) {
+    private boolean isUriNotProtected(String uri) {
         for(String pattern: notProtectedUriPatterns) {
             if(a.match(pattern, uri)) {
                 return true;
@@ -56,8 +60,8 @@ public class TokenAuthenticationFilter extends OncePerRequestFilter {
             HttpServletResponse response,
             FilterChain chain
     ) throws IOException, ServletException {
-        if ("OPTIONS".equalsIgnoreCase(request.getMethod()) ||
-                isUriProtected(request.getRequestURI())) {
+
+        if ("OPTIONS".equalsIgnoreCase(request.getMethod()) || isUriNotProtected(request.getRequestURI())) {
             chain.doFilter(request, response);
             return;
         }
@@ -73,22 +77,33 @@ public class TokenAuthenticationFilter extends OncePerRequestFilter {
         String username = tokenHelper.getUsernameFromToken(authToken);
         String tenantId = tokenHelper.getTenantIdFromToken(authToken);
 
-        try {
-            tenantManager.setCurrentTenant(tenantId);
-        } catch (SQLException | TenantNotFoundException | TenantResolvingException e) {
-            logger.error("Failed to set tenant to tenant: " + tenantId + "; Failure in TokenAuthFilter");
+        if(tenantId == null) {
+            chain.doFilter(request, response);
+            return;
         }
 
-        if (username != null) {
-            // get user
-            UserDetails userDetails = userDetailsService.loadUserByUsername(username);
-            if (tokenHelper.validateToken(authToken, userDetails)) {
-                // create authentication
-                TokenBasedAuthentication authentication = new TokenBasedAuthentication(userDetails);
-                authentication.setToken(authToken);
-                SecurityContextHolder.getContext().setAuthentication(authentication);
-            }
+        try {
+            tenantManager.setCurrentTenant(tenantId);
+        } catch (SQLException | TenantNotFound | TenantResolving | NoTenantFilesFound e) {
+            logger.error("Failed to set tenant to tenant: " + tenantId + "; Failure in TokenAuthFilter");
+            chain.doFilter(request, response);
+            return;
         }
+
+        if (username == null) {
+            chain.doFilter(request, response);
+            return;
+        }
+
+        // get user
+        UserDetails userDetails = userDetailsService.loadUserByUsername(username);
+        if (tokenHelper.validateToken(authToken, userDetails)) {
+            // create authentication
+            TokenBasedAuthentication authentication = new TokenBasedAuthentication(userDetails);
+            authentication.setToken(authToken);
+            SecurityContextHolder.getContext().setAuthentication(authentication);
+        }
+
         chain.doFilter(request, response);
     }
 }
