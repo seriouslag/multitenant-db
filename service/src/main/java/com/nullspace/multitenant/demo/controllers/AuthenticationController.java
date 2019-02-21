@@ -7,6 +7,7 @@ import com.nullspace.multitenant.demo.security.TokenHelper;
 import com.nullspace.multitenant.demo.security.auth.JwtAuthenticationRequest;
 import com.nullspace.multitenant.demo.service.impl.CustomUserDetailsService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -35,7 +36,7 @@ public class AuthenticationController {
     @Autowired
     public AuthenticationController(TokenHelper tokenHelper,
                                     CustomUserDetailsService userDetailsService,
-                                    AuthenticationManager authenticationManager,
+                                    @Qualifier("authenticationManagerBean") AuthenticationManager authenticationManager,
                                     MultiTenantManager tenantManager) {
         this.tokenHelper = tokenHelper;
         this.userDetailsService = userDetailsService;
@@ -66,8 +67,9 @@ public class AuthenticationController {
         User user = (User) authentication.getPrincipal();
         String jws = tokenHelper.generateToken(user.getUsername(), tenantId);
         int expiresIn = tokenHelper.getExpiredIn();
+        String id = user.getId().toString();
         // Return the token
-        return ResponseEntity.ok(new UserTokenState(jws, expiresIn));
+        return ResponseEntity.ok(new UserTokenState(jws, expiresIn, id));
     }
 
     @RequestMapping(value = "/refresh", method = RequestMethod.POST)
@@ -84,8 +86,9 @@ public class AuthenticationController {
             // TODO check user password last update
             String refreshedToken = tokenHelper.refreshToken(authToken);
             int expiresIn = tokenHelper.getExpiredIn();
+            String id = tokenHelper.getTenantIdFromToken(authToken);
 
-            return ResponseEntity.ok(new UserTokenState(refreshedToken, expiresIn));
+            return ResponseEntity.ok(new UserTokenState(refreshedToken, expiresIn, id));
         } else {
             UserTokenState userTokenState = new UserTokenState();
             return ResponseEntity.accepted().body(userTokenState);

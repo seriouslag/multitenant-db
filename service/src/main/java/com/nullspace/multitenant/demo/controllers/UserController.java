@@ -6,7 +6,10 @@ import com.nullspace.multitenant.demo.service.interfaces.IUserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 import java.security.Principal;
 import java.util.List;
@@ -25,8 +28,8 @@ public class UserController {
     }
 
     @RequestMapping(method = GET, value = "/user/{userId}")
-    @PreAuthorize("@securityService.isUser(#authorization, #userId) or hasRole('ROLE_ADMIN')")
-    public User loadById(@PathVariable Long userId, @RequestHeader("Authorization") String authorization) {
+    @PreAuthorize("@securityService.isUser(#user, #userId) or hasRole('ROLE_ADMIN')")
+    public User loadById(Principal user, @PathVariable Long userId) {
         return this.userService.findById(userId);
     }
 
