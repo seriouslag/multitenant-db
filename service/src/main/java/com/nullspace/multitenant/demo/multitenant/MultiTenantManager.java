@@ -6,6 +6,7 @@ import com.nullspace.multitenant.demo.multitenant.Exceptions.NoTenantFilesFound;
 import com.nullspace.multitenant.demo.multitenant.Exceptions.TenantNotFound;
 import com.nullspace.multitenant.demo.multitenant.Exceptions.TenantResolving;
 import com.nullspace.multitenant.demo.support.Cuid;
+import com.zaxxer.hikari.HikariDataSource;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.jdbc.DataSourceProperties;
@@ -14,7 +15,6 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
-import org.springframework.jdbc.datasource.DriverManagerDataSource;
 import org.springframework.jdbc.datasource.lookup.AbstractRoutingDataSource;
 
 import javax.sql.DataSource;
@@ -260,10 +260,10 @@ public class MultiTenantManager {
 		return tenantDataSources.keySet();
 	}
 
-	private DriverManagerDataSource defaultDataSource() {
-		DriverManagerDataSource defaultDataSource = new DriverManagerDataSource();
+	private HikariDataSource defaultDataSource() {
+		HikariDataSource defaultDataSource = new HikariDataSource();
 		defaultDataSource.setDriverClassName("org.h2.Driver");
-		defaultDataSource.setUrl("jdbc:h2:mem:default");
+		defaultDataSource.setJdbcUrl("jdbc:h2:mem:default");
 		defaultDataSource.setUsername("default");
 		defaultDataSource.setPassword("default");
 		return defaultDataSource;

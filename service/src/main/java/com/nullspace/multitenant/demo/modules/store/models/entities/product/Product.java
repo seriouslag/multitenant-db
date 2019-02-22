@@ -60,7 +60,7 @@ public class Product extends BaseEntity {
             org.hibernate.annotations.CascadeType.REFRESH,
             org.hibernate.annotations.CascadeType.REPLICATE
     })
-    private Set<Category> categories = new HashSet<Category>();
+    private Set<Category> categories = new HashSet<>();
 
     @Column(name = "date_available")
     @Temporal(TemporalType.TIMESTAMP)
@@ -73,15 +73,15 @@ public class Product extends BaseEntity {
     private boolean preOrder = false;
 
     @ManyToOne(fetch = FetchType.LAZY, cascade = {CascadeType.REFRESH})
-    @JoinColumn(name = "manufacturer_id", nullable = true)
+    @JoinColumn(name = "manufacturer_id")
     private Manufacturer manufacturer;
 
     @ManyToOne(fetch = FetchType.LAZY, cascade = {CascadeType.REFRESH})
-    @JoinColumn(name = "product_type_id", nullable = true)
+    @JoinColumn(name = "product_type_id")
     private ProductType type;
 
     @ManyToOne(fetch = FetchType.LAZY, cascade = {CascadeType.REFRESH})
-    @JoinColumn(name = "tax_class_id", nullable = true)
+    @JoinColumn(name = "tax_class_id")
     private TaxClass taxClass;
 
     @Column(name = "product_virtual")
@@ -115,7 +115,7 @@ public class Product extends BaseEntity {
     private Integer productOrdered;
 
     @Column(name = "sort_order")
-    private Integer sortOrder = new Integer(0);
+    private Integer sortOrder = 0;
 
     @NotEmpty
     @Pattern(regexp = "^[a-zA-Z0-9_]*$")
@@ -128,21 +128,21 @@ public class Product extends BaseEntity {
     @Column(name = "ref_sku")
     private String refSku;
 
-    @Column(name = "cond", nullable = true)
+    @Column(name = "cond")
     private ProductCondition condition;
 
     /**
      * RENTAL ADDITIONAL FIELDS
      */
 
-    @Column(name = "rental_status", nullable = true)
+    @Column(name = "rental_status")
     private RentalStatus rentalStatus;
 
 
-    @Column(name = "rental_duration", nullable = true)
+    @Column(name = "rental_duration")
     private Integer rentalDuration;
 
-    @Column(name = "rental_period", nullable = true)
+    @Column(name = "rental_period")
     private Integer rentalPeriod;
 
 
@@ -167,7 +167,7 @@ public class Product extends BaseEntity {
      */
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "customer_id", nullable = true)
+    @JoinColumn(name = "customer_id")
     private Customer owner;
 
     public Product() {

@@ -14,13 +14,13 @@ import java.util.Set;
 @UniqueConstraint(columnNames = {"merchant_id", "code"}) )
 public class Manufacturer extends BaseEntity {
     @OneToMany(mappedBy = "manufacturer", cascade = CascadeType.ALL , fetch = FetchType.EAGER)
-    private Set<ManufacturerDescription> descriptions = new HashSet<ManufacturerDescription>();
+    private Set<ManufacturerDescription> descriptions = new HashSet<>();
 
     @Column(name = "manufacturer_image")
     private String image;
 
     @Column(name="sort_order")
-    private Integer order = new Integer(0);
+    private Integer order = 0;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name="merchant_id", nullable=false)

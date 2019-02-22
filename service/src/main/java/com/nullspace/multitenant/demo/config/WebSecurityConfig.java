@@ -62,7 +62,6 @@ public class WebSecurityConfig {
     public class ApiWebServiceConfigurationAdaptor extends WebSecurityConfigurerAdapter {
 
         @Bean
-        @Override
         public AuthenticationManager authenticationManagerBean() throws Exception {
             return super.authenticationManagerBean();
         }
@@ -89,12 +88,6 @@ public class WebSecurityConfig {
     @Configuration
     @Order(1)
     public class ApiWebServiceConfigurationAdaptor2 extends WebSecurityConfigurerAdapter {
-
-        @Bean
-        @Override
-        public AuthenticationManager authenticationManagerBean() throws Exception {
-            return super.authenticationManagerBean();
-        }
 
         @Override
         protected void configure(HttpSecurity http) throws Exception {
