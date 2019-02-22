@@ -12,7 +12,7 @@
 
     <parent>
         <groupId>com.nullspace</groupId>
-        <artifactId>multitenant-db-demo</artifactId>
+        <artifactId>multitenant-db</artifactId>
         <version>0.0.1-SNAPSHOT</version>
     </parent>
 
