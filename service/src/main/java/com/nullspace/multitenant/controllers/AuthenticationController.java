@@ -7,7 +7,6 @@ import com.nullspace.multitenant.security.TokenHelper;
 import com.nullspace.multitenant.security.auth.JwtAuthenticationRequest;
 import com.nullspace.multitenant.services.CustomUserDetailsService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -36,7 +35,7 @@ public class AuthenticationController {
     @Autowired
     public AuthenticationController(TokenHelper tokenHelper,
                                     CustomUserDetailsService userDetailsService,
-                                    @Qualifier("authenticationManagerBean") AuthenticationManager authenticationManager,
+                                    AuthenticationManager authenticationManager,
                                     MultiTenantManager tenantManager) {
         this.tokenHelper = tokenHelper;
         this.userDetailsService = userDetailsService;
