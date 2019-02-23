@@ -2,10 +2,12 @@ package com.nullspace.multitenant.controllers;
 
 import com.nullspace.multitenant.exceptions.NotFound;
 import com.nullspace.multitenant.models.entities.User;
+import com.nullspace.multitenant.models.requests.UserRequest;
 import com.nullspace.multitenant.services.interfaces.IUserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -21,10 +23,12 @@ import static org.springframework.web.bind.annotation.RequestMethod.*;
 public class UserController {
 
     private final IUserService userService;
+    private final BCryptPasswordEncoder bCryptPasswordEncoder;
 
     @Autowired
-    public UserController(IUserService userService) {
+    public UserController(IUserService userService, BCryptPasswordEncoder bCryptPasswordEncoder) {
         this.userService = userService;
+        this.bCryptPasswordEncoder = bCryptPasswordEncoder;
     }
 
     @RequestMapping(method = GET, value = "/user/{userId}")
@@ -50,8 +54,8 @@ public class UserController {
 
     @RequestMapping(method = POST, value = "/user")
     @PreAuthorize("hasRole('ROLE_ADMIN')")
-    public User add(@RequestBody User user) {
-        return this.userService.save(user);
+    public User add(@RequestBody UserRequest user) {
+        return this.userService.save(new User(user.getFirstName(), user.getLastName(), user.getEmail(), bCryptPasswordEncoder.encode(user.getPassword()), user.getUsername()));
     }
 
     @RequestMapping(method = DELETE, value = "/user/{userId}")
