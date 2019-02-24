@@ -1,6 +1,8 @@
 package com.nullspace.multitenant.services.interfaces;
 
 import com.nullspace.multitenant.models.entities.User;
+import com.nullspace.multitenant.models.requests.UserRequest;
+import com.nullspace.multitenant.services.exceptions.AlreadyExists;
 
 import java.util.List;
 
@@ -16,4 +18,6 @@ public interface IUserService extends ICrudService<User, Long> {
     List<User> findAll();
 
     boolean exists(Long id);
+
+    User save(UserRequest userRequest) throws AlreadyExists;
 }

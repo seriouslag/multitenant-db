@@ -10,6 +10,7 @@ import com.nullspace.multitenant.multitenant.Exceptions.TenantNotFound;
 import com.nullspace.multitenant.multitenant.Exceptions.TenantResolving;
 import com.nullspace.multitenant.multitenant.MultiTenantManager;
 import com.nullspace.multitenant.multitenant.TenantResolver;
+import com.nullspace.multitenant.services.exceptions.AlreadyExists;
 import com.nullspace.multitenant.services.interfaces.IUserService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
@@ -109,6 +110,9 @@ public class TenantController {
 		} catch (SQLException | TenantResolving | TenantNotFound | NoTenantFilesFound e) {
 			System.out.println("Failed to set current tenant to new tenant");
 			e.printStackTrace();
+		} catch (AlreadyExists alreadyExists) {
+			System.out.println("Root user already exists");
+			alreadyExists.printStackTrace();
 		}
 		log.info("[i] Loaded DataSource for tenant '{}'.", url);
 		return ResponseEntity.ok(tenantRequest);

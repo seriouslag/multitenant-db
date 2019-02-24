@@ -7,6 +7,7 @@ import com.nullspace.multitenant.multitenant.Exceptions.NoTenantFilesFound;
 import com.nullspace.multitenant.multitenant.Exceptions.TenantNotFound;
 import com.nullspace.multitenant.multitenant.Exceptions.TenantResolving;
 import com.nullspace.multitenant.multitenant.MultiTenantManager;
+import com.nullspace.multitenant.services.exceptions.AlreadyExists;
 import com.nullspace.multitenant.services.interfaces.IUserService;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -58,7 +59,12 @@ public class StartUpData implements CommandLineRunner {
             User user = new User("Root", "Root", "root@example.com", bCryptPasswordEncoder.encode("password"), "root");
             user.setAuthorities(adminAuthorities);
 
-            userService.save(user);
+
+            try {
+                userService.save(user);
+            } catch (AlreadyExists e) {
+                System.out.println(e.getMessage());
+            }
             System.out.println("Finished loading tenant-root.");
         } catch (SQLException | TenantNotFound | TenantResolving | NoTenantFilesFound e) {
             e.printStackTrace();
@@ -82,7 +88,11 @@ public class StartUpData implements CommandLineRunner {
             User user = new User("Landon", "Gavin", "landongavin@example.com", bCryptPasswordEncoder.encode("test"), "landongavin@example.com");
             user.setAuthorities(adminAuthorities);
 
-            userService.save(user);
+            try {
+                userService.save(user);
+            } catch (AlreadyExists e) {
+                System.out.println(e.getMessage());
+            }
             System.out.println("Finished loading tenant1.");
         } catch (SQLException | TenantNotFound | TenantResolving | NoTenantFilesFound e) {
             e.printStackTrace();
@@ -107,7 +117,11 @@ public class StartUpData implements CommandLineRunner {
             User user = new User("Test", "Tester", "testertest@example.com", bCryptPasswordEncoder.encode("test"), "testertest@example.com");
             user.setAuthorities(adminAuthorities);
 
-            userService.save(user);
+            try {
+                userService.save(user);
+            } catch (AlreadyExists e) {
+                System.out.println(e.getMessage());
+            }
             System.out.println("Finished loading tenant2.");
         } catch (SQLException | TenantNotFound | TenantResolving | NoTenantFilesFound e) {
             e.printStackTrace();

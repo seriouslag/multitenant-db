@@ -5,7 +5,7 @@ import com.nullspace.multitenant.exceptions.InvalidTenantIdExeption;
 import com.nullspace.multitenant.multitenant.Exceptions.NoTenantFilesFound;
 import com.nullspace.multitenant.multitenant.Exceptions.TenantNotFound;
 import com.nullspace.multitenant.multitenant.Exceptions.TenantResolving;
-import com.nullspace.multitenant.support.Cuid;
+import com.nullspace.multitenant.utils.Cuid;
 import com.zaxxer.hikari.HikariDataSource;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;

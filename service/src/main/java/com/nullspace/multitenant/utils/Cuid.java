@@ -1,4 +1,4 @@
-package com.nullspace.multitenant.support;
+package com.nullspace.multitenant.utils;
 
 import java.lang.management.ManagementFactory;
 import java.util.Date;
