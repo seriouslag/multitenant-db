@@ -1,19 +1,23 @@
 package com.nullspace.multitenant.models.requests;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Getter
 @Setter
-@NoArgsConstructor
 public class UserUpdateRequest {
     private Long id;
     private String email;
     private String firstName;
     private String lastName;
     private String username;
+    @JsonProperty("isEnabled")
     private boolean isEnabled;
+
+    public UserUpdateRequest() {
+        isEnabled = true;
+    }
 
     public UserUpdateRequest(Long id, String email, String firstName, String lastName) {
         this.id = id;
@@ -24,7 +28,7 @@ public class UserUpdateRequest {
         this.isEnabled = true;
     }
 
-    public UserUpdateRequest(Long id, String email, String firstName, String lastName, boolean isEnabled) {
+    public UserUpdateRequest(Long id, String email, String firstName, String lastName, @JsonProperty("isEnabled") boolean isEnabled) {
         this.id = id;
         this.firstName = firstName;
         this.lastName = lastName;
@@ -42,7 +46,7 @@ public class UserUpdateRequest {
         this.isEnabled = true;
     }
 
-    public UserUpdateRequest(Long id, String email, String password, String firstName, String lastName, String username, boolean isEnabled) {
+    public UserUpdateRequest(Long id, String email, String password, String firstName, String lastName, String username, @JsonProperty("isEnabled") boolean isEnabled) {
         this.id = id;
         this.firstName = firstName;
         this.lastName = lastName;

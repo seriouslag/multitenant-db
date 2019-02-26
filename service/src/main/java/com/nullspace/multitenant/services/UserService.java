@@ -64,8 +64,9 @@ public class UserService implements IUserService {
         if (!updatedUser.getEmail().isEmpty()) {
             oldUser.setEmail(updatedUser.getEmail());
         }
-
-        oldUser.setEnabled(updatedUser.isEnabled());
+        if (updatedUser.isEnabled() != oldUser.isEnabled()) {
+            oldUser.setEnabled(updatedUser.isEnabled());
+        }
         userRepository.save(oldUser);
         return oldUser;
     }
