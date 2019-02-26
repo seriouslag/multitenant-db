@@ -2,6 +2,7 @@ package com.nullspace.multitenant.multitenant;
 
 import com.nullspace.multitenant.exceptions.InvalidDbPropertiesException;
 import com.nullspace.multitenant.exceptions.InvalidTenantIdExeption;
+import com.nullspace.multitenant.models.Module;
 import com.nullspace.multitenant.multitenant.Exceptions.NoTenantFilesFound;
 import com.nullspace.multitenant.multitenant.Exceptions.TenantNotFound;
 import com.nullspace.multitenant.multitenant.Exceptions.TenantResolving;
@@ -147,8 +148,11 @@ public class MultiTenantManager {
 				}
 
 				String sqlDb = loadSqlFromFile("sql/newDb.sql");
-				sqlDb = sqlDb.replace("*TENENTNAME*", url);
-				executeSql(sqlDb);
+				StringBuilder sb = new StringBuilder();
+				Formatter fmt = new Formatter(sb);
+				fmt.format(sqlDb, url);
+				String formattedSql = fmt.toString();
+				executeSql(formattedSql);
 
 				String sqlTables = loadSqlFromFile("sql/dbTables.sql");
 				executeBatchSqlOnDb(sqlTables, url);
@@ -262,10 +266,10 @@ public class MultiTenantManager {
 
 	private HikariDataSource defaultDataSource() {
 		HikariDataSource defaultDataSource = new HikariDataSource();
-		defaultDataSource.setDriverClassName("org.h2.Driver");
-		defaultDataSource.setJdbcUrl("jdbc:h2:mem:default");
-		defaultDataSource.setUsername("default");
-		defaultDataSource.setPassword("default");
+		defaultDataSource.setDriverClassName("org.postgresql.Driver");
+		defaultDataSource.setJdbcUrl(DATABASE_BASE_URL + "default");
+		defaultDataSource.setUsername("postgres");
+		defaultDataSource.setPassword("postgres");
 		return defaultDataSource;
 	}
 
@@ -285,5 +289,9 @@ public class MultiTenantManager {
 			log.error(MSG_NO_TENANT_FILES_FOUND, tenantId);
 			e.printStackTrace();
 		}
+	}
+
+	public void addModuleToTenant(String tenantId, Module module) throws NoTenantFilesFound, TenantNotFound {
+		var tenantDataSource = tenantResolver.resolveById(tenantId);
 	}
 }

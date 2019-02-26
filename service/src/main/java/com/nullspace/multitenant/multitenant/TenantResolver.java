@@ -1,5 +1,6 @@
 package com.nullspace.multitenant.multitenant;
 
+import com.nullspace.multitenant.models.Module;
 import com.nullspace.multitenant.models.responses.Tenant;
 import com.nullspace.multitenant.multitenant.Exceptions.FailedToLoadTenantFile;
 import com.nullspace.multitenant.multitenant.Exceptions.NoTenantFilesFound;
@@ -13,10 +14,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Properties;
+import java.util.*;
 
 import static com.nullspace.multitenant.utils.Utils.joinArrayGeneric;
 
@@ -51,19 +49,47 @@ public class TenantResolver {
     }
 
     public String getTenantsIdByName(String tenantName) throws TenantNotFound, NoTenantFilesFound {
+        return getTenantByName(tenantName).getProperty("id");
+    }
+
+    public File getTenantFileById(String id) throws NoTenantFilesFound, TenantNotFound {
         File[] files = getTenantFilesFromPath(runtimePath);
 
         for (File propertyFile : files) {
             Properties tenantProperties = getTenantPropertiesFromFile(propertyFile);
 
-            String name = tenantProperties.getProperty("url");
-            if (tenantName.equals(name)) {
-                return tenantProperties.getProperty("id");
+            String fileId = tenantProperties.getProperty("id");
+
+            if(fileId.equals(id)) {
+                return propertyFile;
+            }
+        }
+
+        String msg = "[!] Any tenant property files not found at ./tenants/atRuntime folder!";
+        throw new TenantNotFound(msg);
+    }
+
+    public Properties getTenantByProperty(String property, String value) throws NoTenantFilesFound, TenantNotFound {
+        File[] files = getTenantFilesFromPath(runtimePath);
+        for (File propertyFile : files) {
+            Properties tenantProperties = getTenantPropertiesFromFile(propertyFile);
+
+            String tenantValue = tenantProperties.getProperty(property);
+            if (value.equals(tenantValue)) {
+                return tenantProperties;
             }
         }
         String msg = "[!] Any tenant property files not found at ./tenants/atRuntime folder!";
         log.error(msg);
         throw new TenantNotFound(msg);
+    }
+
+    public Properties getTenantByName(String tenantName) throws TenantNotFound, NoTenantFilesFound {
+        return getTenantByProperty("name", tenantName);
+    }
+
+    public Properties getTenantById(String tenantId) throws NoTenantFilesFound, TenantNotFound {
+        return getTenantByProperty("id", tenantId);
     }
 
     public List<Tenant> getListOfAvailableTenants() {
@@ -111,7 +137,22 @@ public class TenantResolver {
         return files;
     }
 
-    private Properties getTenantPropertiesFromFile(File propertyFile) {
+    public boolean checkIfTenantHasModule(String tenantName, Module module) throws NoTenantFilesFound, TenantNotFound {
+        Properties properties = getTenantByName(tenantName);
+        var modules = properties.getProperty("modules");
+
+        var modulesArray = Arrays.asList(modules.split(",")).parallelStream().map(Module::valueOf).toArray();
+
+        for(var m : modulesArray) {
+            if(m == module) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    public Properties getTenantPropertiesFromFile(File propertyFile) {
         Properties tenantProperties = new Properties();
         try {
             tenantProperties.load(new FileInputStream(propertyFile));

@@ -5,6 +5,7 @@ spring:
     open-in-view: false
     hibernate:
       ddl-auto: none
+      #ddl-auto: create-drop
       naming:
         physical-strategy: org.springframework.boot.orm.jpa.hibernate.SpringPhysicalNamingStrategy
     show-sql: true
@@ -44,7 +45,7 @@ app:
 
 jwt:
   header: Authorization
-  expires_in: 900 # 5 minutes
+  expires_in: 900 # 15 minutes
   secret: queenvictoriaqueenvictoriaqueenvictoriaqueenvictoriaqueenvictoriaqueenvictoriaqueenvictoriaqueenvictoriaqueenvictoriaqueenvictoria
 
 tenantRuntimePath: tenants/atRuntime/
