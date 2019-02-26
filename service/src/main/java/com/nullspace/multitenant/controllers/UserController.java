@@ -4,6 +4,7 @@ import com.nullspace.multitenant.exceptions.Conflict;
 import com.nullspace.multitenant.exceptions.NotFound;
 import com.nullspace.multitenant.models.entities.User;
 import com.nullspace.multitenant.models.requests.UserRequest;
+import com.nullspace.multitenant.models.requests.UserUpdateRequest;
 import com.nullspace.multitenant.services.exceptions.AlreadyExists;
 import com.nullspace.multitenant.services.interfaces.IUserService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -45,9 +46,9 @@ public class UserController {
 
     @RequestMapping(method = PUT, value = "/user/{userId}")
     @PreAuthorize("hasRole('ROLE_ADMIN')")
-    public User update(@RequestBody User user, @PathVariable Long userId) {
-        if (user.getId().equals(userId)) {
-            return this.userService.update(user);
+    public User update(@RequestBody UserUpdateRequest userUpdateRequest, @PathVariable Long userId) {
+        if (userUpdateRequest.getId().equals(userId)) {
+            return this.userService.update(userUpdateRequest);
         }
         throw new NotFound();
     }

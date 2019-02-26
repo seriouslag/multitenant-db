@@ -85,7 +85,7 @@ public class TenantResolver {
     }
 
     public Properties getTenantByName(String tenantName) throws TenantNotFound, NoTenantFilesFound {
-        return getTenantByProperty("name", tenantName);
+        return getTenantByProperty("url", tenantName);
     }
 
     public Properties getTenantById(String tenantId) throws NoTenantFilesFound, TenantNotFound {

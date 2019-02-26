@@ -1,8 +1,11 @@
 package com.nullspace.multitenant.services;
 
 import com.nullspace.multitenant.exceptions.NotFound;
+import com.nullspace.multitenant.models.UserRoleName;
+import com.nullspace.multitenant.models.entities.Authority;
 import com.nullspace.multitenant.models.entities.User;
 import com.nullspace.multitenant.models.requests.UserRequest;
+import com.nullspace.multitenant.models.requests.UserUpdateRequest;
 import com.nullspace.multitenant.repositories.UserRepository;
 import com.nullspace.multitenant.services.exceptions.AlreadyExists;
 import com.nullspace.multitenant.services.interfaces.IUserService;
@@ -12,6 +15,7 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -67,6 +71,26 @@ public class UserService implements IUserService {
     }
 
     @Override
+    public User update(UserUpdateRequest userUpdateRequest) {
+        User oldUser = userRepository.findById(userUpdateRequest.getId()).orElseThrow(NotFound::new);
+        if (!userUpdateRequest.getFirstName().isEmpty()) {
+            oldUser.setFirstName(userUpdateRequest.getFirstName());
+        }
+        if (!userUpdateRequest.getLastName().isEmpty()) {
+            oldUser.setLastName(userUpdateRequest.getLastName());
+        }
+
+        if (!userUpdateRequest.getEmail().isEmpty()) {
+            oldUser.setEmail(userUpdateRequest.getEmail());
+        }
+        if (userUpdateRequest.isEnabled() != oldUser.isEnabled()) {
+            oldUser.setEnabled(userUpdateRequest.isEnabled());
+        }
+        userRepository.save(oldUser);
+        return oldUser;
+    }
+
+    @Override
     public User save(User user) throws AlreadyExists {
         if(findByUsername(user.getUsername()) != null) {
             throw new AlreadyExists();
@@ -82,6 +106,12 @@ public class UserService implements IUserService {
                              userRequest.getLastName(),
                              userRequest.getEmail(),
                              bCryptPasswordEncoder.encode(userRequest.getPassword()));
+
+        Authority userAuth = new Authority(UserRoleName.ROLE_USER);
+        List<Authority> userAuthorities = new ArrayList<>();
+        userAuthorities.add(userAuth);
+        user.setAuthorities(userAuthorities);
+
         return save(user);
     }
 
