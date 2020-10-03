@@ -1,6 +1,6 @@
 Requires postgres by default
 
-Application can dynamically spin up new tenants using the root client api
+Application can spin up new tenants using the root client REST api
 
 ![mt.png](mt.png)
 
